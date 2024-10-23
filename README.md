@@ -1,4 +1,5 @@
 # mtl-file-parser
+
 Material Template Library File (.MTL) Parser
 
 ## Installation
@@ -23,8 +24,10 @@ const output = mtlFile.parse(); // see description below
 ```
 
 ## Output
+
 The extracted materials are returned in the format found in [types.ts](./src/types.ts).
 
 ## More to come
+
 mtl-file-parser is actively being developed, and does not yet have full support of the MTL file specification.
 Your comments, feedback and bug reports are welcome and appreciated. Thank you!
