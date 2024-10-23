@@ -1,4 +1,3 @@
-
 export interface Material {
     name?: string;
     illum: number;
