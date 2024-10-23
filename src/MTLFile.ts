@@ -34,7 +34,6 @@ class MTLFile {
         case 'newmtl':  // Starts a new material, assigns a name to it
           this._parseNewMTL(lineItems);
           break;
-
         case 'illum': // Specifies which Illumination model is to be used when rendering the current material. (eg. illum 2)
           // Abbreviations:
           //  N    Unit surface normal
@@ -167,6 +166,7 @@ class MTLFile {
       map_Ks: {},
       map_d: {},
       dissolve: 1.0,
+      opticalDensity: 1.0
     };
     this.materials.push(newMaterial);
   }
@@ -188,7 +188,7 @@ class MTLFile {
 
   _parseIllum(lineItems: string[]) {
     if (lineItems.length < 2) {
-      this._fileError('to few arguments, expected: illum <number>');
+      this._fileError('Too few arguments, expected: illum <number>');
     }
     this._getCurrentMaterial().illum = parseInt(lineItems[1]);
   }
@@ -276,7 +276,7 @@ class MTLFile {
   // extracts the rgb values from a "Ka/Kd/Ks r g b" statement
   _parseKStatementRGB(lineItems: string[]) {
     if (lineItems.length < 4) {
-      this._fileError('to few arguments, expected: Ka/Kd/Ks/Ke keyword followed by: r g b values');
+      this._fileError('Too few arguments, expected: Ka/Kd/Ks/Ke keyword followed by: r g b values');
     }
     if (lineItems[1].toLowerCase() == 'spectral') {
       this._notImplemented('Ka spectral <filename> <factor>');
@@ -304,8 +304,12 @@ class MTLFile {
     this._notImplemented('Ns');
   }
 
-  _parseNi(_lineItems: string[]) {
-    this._notImplemented('Ni');
+  _parseNi(lineItems: string[]) {
+    if (lineItems.length < 2) {
+      this._fileError('Too few arguments, expected: Ni <opticalDensity>');
+    }
+
+    this._getCurrentMaterial().opticalDensity = parseFloat(lineItems[1]);
   }
 
   // d factor
@@ -315,7 +319,7 @@ class MTLFile {
   // A value of 1.0 for "d" is the default and means fully opaque, as does a value of 0.0 for "Tr".
   _parseD(lineItems: string[]) {
     if (lineItems.length < 2) {
-      this._fileError('to few arguments, expected: d <factor>');
+      this._fileError('Too few arguments, expected: d <factor>');
     }
     this._getCurrentMaterial().dissolve = parseFloat(lineItems[1]);
   }
@@ -327,7 +331,7 @@ class MTLFile {
   // A value of 1.0 for "d" is the default and means fully opaque, as does a value of 0.0 for "Tr".
   _parseTr(lineItems: string[]) {
     if (lineItems.length < 2) {
-      this._fileError('to few arguments, expected: Tr <factor>');
+      this._fileError('Too few arguments, expected: Tr <factor>');
     }
     this._getCurrentMaterial().dissolve = 1.0 - parseFloat(lineItems[1]);
   }
@@ -341,7 +345,7 @@ class MTLFile {
   _parseMapKa(lineItems: string[]) {
     // TODO parse options (lineItems[1] to lineItems[lineItems.length - 2])
     if (lineItems.length < 2) {
-      this._fileError('to few arguments, expected: map_ka <textureImageFile>');
+      this._fileError('Too few arguments, expected: map_ka <textureImageFile>');
     }
     const file = lineItems[lineItems.length - 1];
     this._getCurrentMaterial().map_Ka.file = file;
@@ -351,7 +355,7 @@ class MTLFile {
   _parseMapKd(lineItems: string[]) {
     // TODO parse options (lineItems[1] to lineItems[lineItems.length - 2])
     if (lineItems.length < 2) {
-      this._fileError('to few arguments, expected: map_Kd <textureImageFile>');
+      this._fileError('Too few arguments, expected: map_Kd <textureImageFile>');
     }
     const file = lineItems[lineItems.length - 1];
     this._getCurrentMaterial().map_Kd.file = file;
@@ -361,7 +365,7 @@ class MTLFile {
   _parseMapD(lineItems: string[]) {
     // TODO parse options (lineItems[1] to lineItems[lineItems.length - 2])
     if (lineItems.length < 2) {
-      this._fileError('to few arguments, expected: map_d <textureImageFile>');
+      this._fileError('Too few arguments, expected: map_d <textureImageFile>');
     }
     const file = lineItems[lineItems.length - 1];
     this._getCurrentMaterial().map_d.file = file;
@@ -371,7 +375,7 @@ class MTLFile {
   _parseMapKs(lineItems: string[]) {
     // TODO parse options (lineItems[1] to lineItems[lineItems.length - 2])
     if (lineItems.length < 2) {
-      this._fileError('to few arguments, expected: map_Ks <textureImageFile>');
+      this._fileError('Too few arguments, expected: map_Ks <textureImageFile>');
     } else if (lineItems.length > 2) {
 
     }
