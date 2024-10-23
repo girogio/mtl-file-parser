@@ -54,6 +54,9 @@ class MTLFile {
                 case 'ks': // (Ks) - Specular reflectance
                     this._parseKs(lineItems);
                     break;
+                case 'ke': // (Ke) - Emissive color of the material
+                    this._parseKe(lineItems);
+                    break;
                 case 'tf': // Transmission filter
                     this._parseTF(lineItems);
                     break;

@@ -1,5 +1,5 @@
 {
-  "name": "mtl-file-parser",
+  "name": "@girogio/mtl-file-parser",
   "version": "0.4.0",
   "description": "Material Template Library File (.MTL) Parser",
   "main": "dist/index.js",
@@ -29,8 +29,8 @@
     "parser"
   ],
   "authors": [
-    "Wesley Unwin <wes_unwin@hotmail.com>",
-    "Giorgio Grigolo <giorgio@grigolo.mt>"
+    "Giorgio Grigolo <giorgio@grigolo.mt>",
+    "Wesley Unwin <wes_unwin@hotmail.com>"
   ],
   "license": "MIT",
   "bugs": {
