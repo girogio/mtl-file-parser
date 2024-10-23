@@ -4,7 +4,7 @@ Material Template Library File (.MTL) Parser
 ## Installation
 
 ```javascript
-npm install girogio/mtl-file-parser
+npm i mtl-file-parser
 ```
 
 ## Usage
