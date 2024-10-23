@@ -1,39 +1,36 @@
-'use strict';
-
+import { Material } from './types'
 
 class MTLFile {
+  materials: Material[] = [];
+  currentMaterial?: Material;
+  lineNumber: number = 1;
+  fileName: string = ''
+  fileContents: string;
+  defaultMaterialName: string = 'default';
 
-  constructor(fileContents) {
-    this._reset();
+  constructor(fileContents: string) {
     this.fileContents = fileContents;
   }
 
   _reset() {
     this.materials = [];
-    this.currentMaterial = null;
+    this.currentMaterial = undefined;
     this.lineNumber = 1;
-    this.filename = '';
+    this.fileName = '';
   }
 
-  parse(defaultMaterialName = 'default') {
+  parse() {
     this._reset();
 
-    this.defaultMaterialName = defaultMaterialName;
-
     const lines = this.fileContents.split("\n");
-
     lines.forEach((line, index) => {
-
       this.lineNumber = (index + 1);
-
       const lineItems = MTLFile._stripComments(line).replace(/\s\s+/g, ' ').trim().split(' ');
-
       if (lineItems.length == 0 || !lineItems[0]) {
         return; // Skip blank lines
       }
 
-      switch(lineItems[0].toLowerCase())
-      {
+      switch (lineItems[0].toLowerCase()) {
         case 'newmtl':  // Starts a new material, assigns a name to it
           this._parseNewMTL(lineItems);
           break;
@@ -127,16 +124,16 @@ class MTLFile {
     return this.materials;
   }
 
-  static _stripComments(lineString) {
+  static _stripComments(lineString: string) {
     let commentIndex = lineString.indexOf('#');
-    if(commentIndex > -1)
+    if (commentIndex > -1)
       return lineString.substring(0, commentIndex);
     else
       return lineString;
   }
 
-  _createMaterial(name) {
-    const newMaterial = {
+  _createMaterial(name: string) {
+    const newMaterial: Material = {
       name: name,
       illum: 0,
       Ka: {
@@ -157,22 +154,21 @@ class MTLFile {
         green: 0,
         blue: 0
       },
-      map_Ka: {
-        file: null
+      Ke: {
+        method: 'rgb',
+        red: 0,
+        green: 0,
+        blue: 0
       },
-      map_Kd: {
-        file: null
-      },
-      map_Ks: {
-        file: null
-      },
-      map_d: {
-        file: null
-      },
+      map_Ka: {},
+      map_Kd: {},
+      map_Ks: {},
+      map_d: {},
       dissolve: 1.0,
     };
     this.materials.push(newMaterial);
   }
+
   _getCurrentMaterial() {
     if (this.materials.length == 0) {
       this._createMaterial(this.defaultMaterialName);
@@ -181,14 +177,14 @@ class MTLFile {
   }
 
   // newmtl material_name
-  _parseNewMTL(lineItems) {
+  _parseNewMTL(lineItems: string[]) {
     if (lineItems.length < 2) {
       throw 'newmtl statement must specify a name for the maerial (eg, newmtl brickwall)';
     }
     this._createMaterial(lineItems[1]);
   }
 
-  _parseIllum(lineItems) {
+  _parseIllum(lineItems: string[]) {
     if (lineItems.length < 2) {
       this._fileError('to few arguments, expected: illum <number>');
     }
@@ -198,13 +194,19 @@ class MTLFile {
   // Ka r g b         <- currently only this syntax is supported
   // Ka spectral file.rfl factor
   // Ka xyz x y z
-  _parseKa(lineItems) {
+  _parseKa(lineItems: string[]) {
     if (lineItems.length != 4) {
       this._notImplemented('Ka statements must have exactly 3 arguments (only Ka R G B syntax is supported');
       return;
     }
     const Ka = this._getCurrentMaterial().Ka;
     const color = this._parseKStatementRGB(lineItems);
+
+    if (!color) {
+      this._fileError('Ka statement must specify r g b values');
+      return;
+    }
+
     Ka.red = color.red;
     Ka.green = color.green;
     Ka.blue = color.blue;
@@ -213,13 +215,19 @@ class MTLFile {
   // Kd r g b         <- currently only this syntax is supported
   // Kd spectral file.rfl factor
   // Kd xyz x y z
-  _parseKd(lineItems) {
+  _parseKd(lineItems: string[]) {
     if (lineItems.length != 4) {
       this._notImplemented('Kd statements must have exactly 3 arguments (only Kd R G B syntax is supported');
       return;
     }
     const Kd = this._getCurrentMaterial().Kd;
     const color = this._parseKStatementRGB(lineItems);
+
+    if (!color) {
+      this._fileError('Ks statement must specify r g b values');
+      return;
+    }
+
     Kd.red = color.red;
     Kd.green = color.green;
     Kd.blue = color.blue;
@@ -228,22 +236,45 @@ class MTLFile {
   // Ks r g b
   // Ks spectral file.rfl factor
   // Ks xyz x y z
-  _parseKs(lineItems) {
+  _parseKs(lineItems: string[]) {
     if (lineItems.length != 4) {
       this._notImplemented('Ks statements must have exactly 3 arguments (only Ks R G B syntax is supported');
       return;
     }
     const Ks = this._getCurrentMaterial().Ks;
     const color = this._parseKStatementRGB(lineItems);
+
+    if (!color) {
+      this._fileError('Ks statement must specify r g b values');
+      return;
+    }
+
     Ks.red = color.red;
     Ks.green = color.green;
     Ks.blue = color.blue;
   }
 
+  _parseKe(_lineItems: string[]) {
+    if (_lineItems.length != 4) {
+      this._notImplemented('Ke statements must have exactly 3 arguments (only Ke R G B syntax is supported');
+    }
+    const Ke = this._getCurrentMaterial().Ke
+    const color = this._parseKStatementRGB(_lineItems);
+
+    if (!color) {
+      this._fileError('Ke statement must specify r g b values');
+      return;
+    }
+
+    Ke.red = color.red;
+    Ke.green = color.green;
+    Ke.blue = color.blue;
+  }
+
   // extracts the rgb values from a "Ka/Kd/Ks r g b" statement
-  _parseKStatementRGB(lineItems) {
+  _parseKStatementRGB(lineItems: string[]) {
     if (lineItems.length < 4) {
-      this._fileError('to few arguments, expected: Ka/Kd/Ks keyword followed by: r g b values');
+      this._fileError('to few arguments, expected: Ka/Kd/Ks/Ke keyword followed by: r g b values');
     }
     if (lineItems[1].toLowerCase() == 'spectral') {
       this._notImplemented('Ka spectral <filename> <factor>');
@@ -260,18 +291,18 @@ class MTLFile {
     };
   }
 
-  _parseTF(lineItems) {
+  _parseTF(_lineItems: string[]) {
     this._notImplemented('tf');
   }
 
   // ns 500
   // Defines how focused the specular highlight is,
   // typically in the range of 0 to 1000.
-  _parseNs(lineItems) {
+  _parseNs(_lineItems: string[]) {
     this._notImplemented('Ns');
   }
 
-  _parseNi(lineItems) {
+  _parseNi(_lineItems: string[]) {
     this._notImplemented('Ni');
   }
 
@@ -280,7 +311,7 @@ class MTLFile {
   // Materials can be transparent. This is referred to as being dissolved. 
   // Unlike real transparency, the result does not depend upon the thickness of the object. 
   // A value of 1.0 for "d" is the default and means fully opaque, as does a value of 0.0 for "Tr".
-  _parseD(lineItems) {
+  _parseD(lineItems: string[]) {
     if (lineItems.length < 2) {
       this._fileError('to few arguments, expected: d <factor>');
     }
@@ -292,20 +323,20 @@ class MTLFile {
   // Materials can be transparent. This is referred to as being dissolved. 
   // Unlike real transparency, the result does not depend upon the thickness of the object. 
   // A value of 1.0 for "d" is the default and means fully opaque, as does a value of 0.0 for "Tr".
-  _parseTr(lineItems) {
+  _parseTr(lineItems: string[]) {
     if (lineItems.length < 2) {
       this._fileError('to few arguments, expected: Tr <factor>');
     }
     this._getCurrentMaterial().dissolve = 1.0 - parseFloat(lineItems[1]);
   }
 
-  _parseSharpness(lineItems) {
+  _parseSharpness(lineItems: string[]) {
     this._notImplemented('sharpness');
   }
 
   // map_Ka [options] textureFile
   // map_Ka -s 1 1 1 -o 0 0 0 -mm 0 1 file.mpc
-  _parseMapKa(lineItems) {
+  _parseMapKa(lineItems: string[]) {
     // TODO parse options (lineItems[1] to lineItems[lineItems.length - 2])
     if (lineItems.length < 2) {
       this._fileError('to few arguments, expected: map_ka <textureImageFile>');
@@ -315,7 +346,7 @@ class MTLFile {
   }
 
   // map_Kd [options] textureFile
-  _parseMapKd(lineItems) {
+  _parseMapKd(lineItems: string[]) {
     // TODO parse options (lineItems[1] to lineItems[lineItems.length - 2])
     if (lineItems.length < 2) {
       this._fileError('to few arguments, expected: map_Kd <textureImageFile>');
@@ -325,7 +356,7 @@ class MTLFile {
   }
 
   // map_d [options] textureFile
-  _parseMapD(lineItems) {
+  _parseMapD(lineItems: string[]) {
     // TODO parse options (lineItems[1] to lineItems[lineItems.length - 2])
     if (lineItems.length < 2) {
       this._fileError('to few arguments, expected: map_d <textureImageFile>');
@@ -335,7 +366,7 @@ class MTLFile {
   }
 
   // map_Ks [options] textureFile
-  _parseMapKs(lineItems) {
+  _parseMapKs(lineItems: string[]) {
     // TODO parse options (lineItems[1] to lineItems[lineItems.length - 2])
     if (lineItems.length < 2) {
       this._fileError('to few arguments, expected: map_Ks <textureImageFile>');
@@ -346,31 +377,31 @@ class MTLFile {
     this._getCurrentMaterial().map_Ks.file = file;
   }
 
-  _parseMapNs(lineItems) {
+  _parseMapNs(lineItems: string[]) {
     this._notImplemented('map_Ns');
   }
 
-  _parseDisp(lineItems) {
+  _parseDisp(lineItems: string[]) {
     this._notImplemented('disp');
   }
 
-  _parseDecal(lineItems) {
+  _parseDecal(lineItems: string[]) {
     this._notImplemented('decal');
   }
 
-  _parseBump(lineItems) {
+  _parseBump(lineItems: string[]) {
     this._notImplemented('bump');
   }
 
-  _parseRefl(lineItems) {
+  _parseRefl(lineItems: string[]) {
     this._notImplemented('bump');
   }
 
-  _notImplemented(message) {
+  _notImplemented(message: string) {
     console.warn(`MTL file statement not implemented: ${message}`);
   }
 
-  _fileError(message) {
+  _fileError(message: string) {
     const material = `Material: ${this._getCurrentMaterial().name}`;
     const line = `Line: ${this.lineNumber}`;
     const errorMessage = `MTL file format error (${line}  ${material}): ${message}`;
@@ -379,4 +410,4 @@ class MTLFile {
 
 }
 
-module.exports = MTLFile;
+export default MTLFile;
