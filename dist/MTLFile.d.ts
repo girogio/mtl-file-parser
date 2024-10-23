@@ -25,7 +25,7 @@ declare class MTLFile {
     } | undefined;
     _parseTF(_lineItems: string[]): void;
     _parseNs(_lineItems: string[]): void;
-    _parseNi(_lineItems: string[]): void;
+    _parseNi(lineItems: string[]): void;
     _parseD(lineItems: string[]): void;
     _parseTr(lineItems: string[]): void;
     _parseSharpness(lineItems: string[]): void;

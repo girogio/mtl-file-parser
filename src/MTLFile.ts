@@ -297,11 +297,11 @@ class MTLFile {
     this._notImplemented('tf');
   }
 
-  // ns 500
-  // Defines how focused the specular highlight is,
-  // typically in the range of 0 to 1000.
-  _parseNs(_lineItems: string[]) {
-    this._notImplemented('Ns');
+  _parseNs(lineItems: string[]) {
+    if (lineItems.length < 2) {
+      this._fileError('Too few arguments, expected: ns <exponent>');
+    }
+    this._getCurrentMaterial().specularShininess = parseFloat(lineItems[1]);
   }
 
   _parseNi(lineItems: string[]) {
@@ -312,15 +312,11 @@ class MTLFile {
     this._getCurrentMaterial().opticalDensity = parseFloat(lineItems[1]);
   }
 
-  // d factor
-  // Controls how much the current material dissolves (becomes transparent).
-  // Materials can be transparent. This is referred to as being dissolved. 
-  // Unlike real transparency, the result does not depend upon the thickness of the object. 
-  // A value of 1.0 for "d" is the default and means fully opaque, as does a value of 0.0 for "Tr".
   _parseD(lineItems: string[]) {
     if (lineItems.length < 2) {
       this._fileError('Too few arguments, expected: d <factor>');
     }
+
     this._getCurrentMaterial().dissolve = parseFloat(lineItems[1]);
   }
 

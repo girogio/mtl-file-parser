@@ -38,4 +38,5 @@ export interface Material {
         file?: string;
     };
     dissolve: number;
+    opticalDensity: number;
 }
