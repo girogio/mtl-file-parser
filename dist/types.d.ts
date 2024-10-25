@@ -1,5 +1,5 @@
 export interface Material {
-    name?: string;
+    name: string;
     illum: number;
     Ka: {
         method: string;
@@ -39,4 +39,5 @@ export interface Material {
     };
     dissolve: number;
     opticalDensity: number;
+    specularShininess?: number;
 }

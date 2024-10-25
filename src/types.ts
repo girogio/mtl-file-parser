@@ -1,5 +1,5 @@
 export interface Material {
-    name?: string;
+    name: string;
     illum: number;
     Ka: {
         method: string;
